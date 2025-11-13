@@ -1,61 +1,72 @@
 <template>
-  <div class="text-white">
-    <h1 class="text-3xl font-bold mb-6">Ekstrak & Dekripsi Data</h1>
+  <div class="text-white max-w-5xl mx-auto">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-white mb-2">Ekstrak & Dekripsi Data</h1>
+      <p class="text-slate-400">Ambil kembali pesan rahasia Anda dari media digital.</p>
+    </header>
 
-    <div class="bg-slate-900 p-8 rounded-lg shadow-lg">
+    <div class="bg-slate-900 p-8 rounded-2xl shadow-2xl border border-slate-800">
       <form @submit.prevent="handleDecode">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <label class="font-semibold block mb-2 text-indigo-400">
-              Langkah 1: Media Host (File Terenkripsi)
-            </label>
-            <div
-              class="flex items-center justify-center w-full h-48 bg-slate-800 border-2 border-dashed border-slate-600 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors"
-              @dragover.prevent
-              @drop.prevent="onHostDrop"
-              @click="triggerHostInput"
-            >
-              <div class="text-center">
-                <i class="pi pi-cloud-upload text-4xl text-slate-500"></i>
-                <p class="mt-2 text-slate-400">
-                  Drag & drop atau <span class="text-indigo-400">klik untuk memilih</span> file
-                  terenkripsi.
-                </p>
-                <p v-if="hostFile" class="mt-2 text-green-400 font-mono text-sm">
-                  {{ hostFile.name }} ({{ formatBytes(hostFile.size) }})
-                </p>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          <div class="lg:col-span-7 space-y-6">
+            <div class="bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-xl mb-6">
+              <div class="flex items-start gap-3">
+                <i class="pi pi-info-circle text-indigo-400 text-xl mt-0.5"></i>
+                <div class="text-sm text-slate-300">
+                  <p class="font-semibold text-indigo-300 mb-1">Bagaimana cara kerjanya?</p>
+                  <p>Upload file media (Gambar, PDF, Audio) yang sudah disisipi pesan. Sistem akan mengekstrak isinya dan memberikannya kepada Anda sebagai file download.</p>
+                </div>
               </div>
-              <input type="file" ref="hostInput" class="hidden" @change="onHostSelect" />
             </div>
+
+            <FileDropZone
+              label="File Media Terenkripsi (Host)"
+              icon="pi pi-lock-open"
+              v-model:file="hostFile"
+              :required="true"
+            />
           </div>
 
-          <div class="bg-slate-800 p-6 rounded-lg">
-            <h3 class="text-lg font-semibold mb-4 text-indigo-400">Opsi & Aksi</h3>
-            <div class="field">
-              <label for="key" class="font-semibold block mb-2">
-                Langkah 2: Kunci Dekripsi (1-255)
-              </label>
-              <InputNumber
-                v-model="key"
-                inputId="key"
-                :min="1"
-                :max="255"
-                class="w-full"
-                :inputStyle="{ 'background-color': '#1e293b', color: 'white' }"
-              />
-              <small class="text-slate-400 mt-1">Gunakan kunci yang sama saat enkripsi.</small>
-            </div>
+          <div class="lg:col-span-5">
+            <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 sticky top-6">
+              <h3 class="text-lg font-semibold mb-4 text-indigo-400 flex items-center gap-2">
+                <i class="pi pi-key"></i> Kunci Keamanan
+              </h3>
+              
+              <div class="space-y-6">
+                <div>
+                  <label class="font-medium block mb-2 text-slate-300">Masukkan Kunci (1-255)</label>
+                  <InputNumber
+                    v-model="key"
+                    :min="1"
+                    :max="255"
+                    showButtons
+                    buttonLayout="horizontal"
+                    class="w-full"
+                    inputClass="text-center bg-slate-900 border-slate-600 text-white font-mono"
+                  >
+                    <template #incrementbuttonicon><span class="pi pi-plus" /></template>
+                    <template #decrementbuttonicon><span class="pi pi-minus" /></template>
+                  </InputNumber>
+                  <small class="text-slate-500 mt-2 block leading-tight">
+                    <i class="pi pi-exclamation-triangle text-yellow-600 mr-1"></i>
+                    Kunci harus <strong>sama persis</strong> dengan yang digunakan saat enkripsi. Jika salah, hasil ekstraksi akan rusak/gagal.
+                  </small>
+                </div>
 
-            <div class="mt-8 border-t border-slate-700 pt-6">
-              <Button
-                type="submit"
-                label="Proses Ekstraksi"
-                icon="pi pi-key"
-                iconPos="right"
-                :loading="isLoading"
-                :disabled="isLoading || !hostFile"
-                class="w-full p-button-lg bg-indigo-500 hover:bg-indigo-600 border-indigo-500"
-              />
+                <div class="pt-4 border-t border-slate-700">
+                  <Button
+                    type="submit"
+                    label="Proses Dekripsi"
+                    icon="pi pi-unlock"
+                    iconPos="right"
+                    :loading="isLoading"
+                    :disabled="!isValid"
+                    class="w-full p-button-lg bg-emerald-600 hover:bg-emerald-500 border-none shadow-lg shadow-emerald-900/20 transition-all transform hover:-translate-y-0.5"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -65,37 +76,21 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import axios from 'axios'
 import { useToast } from 'primevue/usetoast'
+import FileDropZone from '../components/FileDropZone.vue'
 
 const toast = useToast()
 const isLoading = ref(false)
-const key = ref(10)
+const key = ref(50)
 const hostFile = ref(null)
-const hostInput = ref(null)
+
 const API_URL = 'http://localhost:8000'
 
-const formatBytes = (bytes, decimals = 2) => {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const dm = decimals < 0 ? 0 : decimals
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
-}
-
-const onHostSelect = (event) => {
-  hostFile.value = event.target.files[0]
-}
-
-const onHostDrop = (event) => {
-  hostFile.value = event.dataTransfer.files[0]
-}
-
-const triggerHostInput = () => {
-  hostInput.value.click()
-}
+const isValid = computed(() => {
+  return hostFile.value && key.value
+})
 
 const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob)
@@ -109,31 +104,6 @@ const downloadBlob = (blob, filename) => {
 }
 
 const handleDecode = async () => {
-  if (!hostFile.value || !key.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'File host dan Kunci wajib diisi.',
-      life: 3000
-    })
-    return
-  }
-
-  // Validasi Manual di Frontend untuk memberikan pesan yang lebih jelas
-  const fileName = hostFile.value.name
-  const validExtensions = ['.png', '.jpg', '.jpeg', '.wav', '.mp3', '.mp4', '.m4a', '.pdf', '.docx', '.xlsx']
-  const hasValidExt = validExtensions.some(ext => fileName.toLowerCase().endsWith(ext))
-
-  if (!hasValidExt) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Format File Mencurigakan',
-      detail: 'File tidak memiliki ekstensi yang dikenali. Backend mungkin menolaknya. Pastikan file berakhiran .pdf, .png, dll.',
-      life: 5000
-    })
-    // Kita tetap izinkan lanjut, siapa tahu Backend bisa handle (misal by mime-type nantinya)
-  }
-
   isLoading.value = true
   const formData = new FormData()
   formData.append('host_file', hostFile.value)
@@ -145,32 +115,38 @@ const handleDecode = async () => {
     })
 
     if (response.status === 200) {
+      // Ambil nama file asli dari header backend
       const disposition = response.headers['content-disposition']
-      let filename = 'rahasia.dat'
+      let filename = 'rahasia_terekstrak.dat' // Default fallback
+      
       if (disposition) {
         const match = /filename="([^"]*)"/.exec(disposition)
         if (match) filename = match[1]
       }
 
       downloadBlob(response.data, filename)
-      toast.add({
-        severity: 'success',
-        summary: 'Sukses',
-        detail: 'File rahasia berhasil diekstrak.',
-        life: 3000
+      
+      toast.add({ 
+        severity: 'success', 
+        summary: 'Berhasil!', 
+        detail: `File "${filename}" berhasil diekstrak.`, 
+        life: 4000 
       })
     }
   } catch (error) {
-    let message = 'Terjadi error tidak diketahui.'
+    let message = 'Gagal memproses file.'
+    
     if (error.response && error.response.data) {
       try {
-        const errorJson = JSON.parse(await error.response.data.text())
-        message = errorJson.detail || message
-      } catch {
-        message = 'Gagal memproses file. Kunci mungkin salah atau file rusak.'
+        // Blob error response harus dibaca sebagai text dulu
+        const text = await error.response.data.text()
+        const json = JSON.parse(text)
+        message = json.detail || message
+      } catch (e) { 
+        message = "Kunci salah atau file tidak mengandung pesan rahasia."
       }
     }
-    toast.add({ severity: 'error', summary: 'Error', detail: message, life: 5000 })
+    toast.add({ severity: 'error', summary: 'Gagal', detail: message, life: 5000 })
   } finally {
     isLoading.value = false
   }

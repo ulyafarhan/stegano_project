@@ -1,4 +1,3 @@
-# backend/utils.py
 import struct
 from fastapi import HTTPException, status
 
@@ -10,21 +9,24 @@ def pack_payload(data: bytes) -> bytes:
 
 def unpack_payload(data: bytes) -> tuple[bytes, bytes]:
     if len(data) < PAYLOAD_HEADER_SIZE:
-        raise HTTPException(status_code=400, detail="Data rusak.")
+        raise HTTPException(status_code=400, detail="Data rusak: header tidak lengkap.")
     payload_size = struct.unpack('>I', data[:PAYLOAD_HEADER_SIZE])[0]
     payload_end = PAYLOAD_HEADER_SIZE + payload_size
     if len(data) < payload_end:
-        raise HTTPException(status_code=400, detail="Data terpotong.")
+        raise HTTPException(status_code=400, detail="Data rusak: payload terpotong.")
     return data[PAYLOAD_HEADER_SIZE:payload_end], data[payload_end:]
 
+# --- FITUR BARU: Deteksi Jenis File Fleksibel ---
 def detect_file_type(header: bytes) -> str:
-    if header.startswith(b'%PDF'): return '.pdf'
-    if header.startswith(b'\x89PNG\r\n\x1a\n'): return '.png'
-    if header.startswith(b'\xff\xd8\xff'): return '.jpg'
-    if header.startswith(b'RIFF') and header[8:12] == b'WAVE': return '.wav'
-    if header.startswith(b'ID3') or header.startswith(b'\xff\xfb'): return '.mp3'
-    if len(header) > 12 and header[4:8] == b'ftyp': return '.mp4'
-    if header.startswith(b'PK\x03\x04'): return '.docx'
+    """Mendeteksi ekstensi file dengan mencari signature di dalam header (bukan cuma di awal)."""
+    # Cari substring magic bytes di 64 byte pertama
+    if b'%PDF' in header: return '.pdf'
+    if b'PNG' in header and b'\x1a\n' in header: return '.png'
+    if b'\xff\xd8\xff' in header: return '.jpg'
+    if b'RIFF' in header and b'WAVE' in header: return '.wav'
+    if header.startswith(b'ID3') or b'\xff\xfb' in header: return '.mp3'
+    if b'ftyp' in header: return '.mp4'
+    if b'PK\x03\x04' in header: return '.docx' # Default Office
     return ''
 
 def create_package(file_data: bytes, filename: str) -> bytes:
@@ -42,17 +44,6 @@ def extract_package(package_data: bytes) -> tuple[bytes, str]:
         content = package_data[4 + filename_len :]
         return content, filename
     except Exception:
-        # Fallback untuk file lama
-        ext = detect_file_type(package_data[:32])
+        # Fallback untuk file lama/tanpa paket nama
+        ext = detect_file_type(package_data[:64])
         return package_data, f"hasil_ekstraksi{ext if ext else '.dat'}"
-
-# --- FITUR BARU: Deteksi Jenis File Otomatis ---
-def detect_file_type(header: bytes) -> str:
-    if header.startswith(b'%PDF'): return '.pdf'
-    if header.startswith(b'\x89PNG\r\n\x1a\n'): return '.png'
-    if header.startswith(b'\xff\xd8\xff'): return '.jpg'
-    if header.startswith(b'RIFF') and header[8:12] == b'WAVE': return '.wav'
-    if header.startswith(b'ID3') or header.startswith(b'\xff\xfb'): return '.mp3'
-    if len(header) > 12 and header[4:8] == b'ftyp': return '.mp4'
-    if header.startswith(b'PK\x03\x04'): return '.docx' # Bisa juga xlsx, default docx
-    return ''

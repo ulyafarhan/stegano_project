@@ -1,3 +1,4 @@
+# steganography/pdf_handler.py
 from .interface import SteganographyStrategy
 import io
 from pypdf import PdfReader, PdfWriter
@@ -21,6 +22,7 @@ class PDFHandler(SteganographyStrategy):
         writer.add_metadata(reader.metadata)
         
         encoded_payload = base64.b64encode(payload).decode('utf-8')
+        # Simpan payload ke metadata khusus
         writer.add_metadata({self.METADATA_KEY: encoded_payload})
         
         output_buffer = io.BytesIO()
@@ -37,12 +39,12 @@ class PDFHandler(SteganographyStrategy):
         
         metadata = reader.metadata
         if metadata is None or self.METADATA_KEY not in metadata:
-            raise ValueError("Tidak ada metadata steganografi ditemukan.")
+            raise ValueError("Tidak ada metadata steganografi ditemukan di PDF ini.")
             
         encoded_payload = metadata[self.METADATA_KEY]
         
         try:
-            # Pypdf bisa mengembalikan IndirectObject
+            # Pypdf terkadang mengembalikan objek referensi, kita perlu ambil nilainya
             if hasattr(encoded_payload, 'get_object'):
                 encoded_payload = encoded_payload.get_object()
                 
