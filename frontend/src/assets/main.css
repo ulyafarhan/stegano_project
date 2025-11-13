@@ -34,3 +34,147 @@ html, body {
 .p-button.p-disabled, .p-button:disabled {
   @apply bg-slate-700 text-slate-500 border-slate-700;
 }
+
+/* 3. Responsive Design Improvements */
+
+/* Mobile-first improvements */
+@media (max-width: 640px) {
+  /* Smaller padding on mobile */
+  .mobile-padding {
+    padding: 0.75rem;
+  }
+  
+  /* Smaller text on mobile */
+  .mobile-text {
+    font-size: 0.875rem;
+  }
+  
+  /* Full width buttons on mobile */
+  .mobile-full-width {
+    width: 100%;
+  }
+  
+  /* Adjust main content padding for mobile */
+  main > div {
+    padding: 0.75rem;
+    padding-top: 4rem;
+  }
+  
+  /* Smaller cards on mobile */
+  .p-card {
+    @apply p-4;
+  }
+  
+  /* Adjust grid layouts for mobile */
+  .mobile-grid-1 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablet improvements */
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* Adjust main content padding */
+  main > div {
+    padding: 1.5rem;
+    padding-top: 1.5rem;
+  }
+  
+  /* Adjust card padding */
+  .p-card {
+    @apply p-6;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  button, .p-button, .router-link {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Larger text for better readability */
+  body {
+    font-size: 1rem;
+  }
+  
+  /* Increase spacing between interactive elements */
+  .touch-spacing > * + * {
+    margin-top: 0.75rem;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+  .landscape-hidden {
+    display: none;
+  }
+  
+  .landscape-compact {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  /* Reduce sidebar height in landscape */
+  aside {
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper text rendering */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 375px) {
+  /* Very small screens */
+  .xs-text {
+    font-size: 0.75rem;
+  }
+  
+  .xs-padding {
+    padding: 0.5rem;
+  }
+  
+  /* Hide non-essential elements */
+  .xs-hidden {
+    display: none;
+  }
+  
+  /* Adjust header for very small screens */
+  .lg:hidden h1 {
+    font-size: 1rem;
+  }
+  
+  .lg:hidden button {
+    padding: 0.25rem;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1280px) {
+  /* Increase max-width for large screens */
+  .max-w-container {
+    max-width: 1200px;
+  }
+  
+  /* Larger spacing for large screens */
+  .xl-spacing {
+    gap: 2rem;
+  }
+}

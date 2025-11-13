@@ -1,45 +1,45 @@
 <template>
-  <div class="text-white max-w-5xl mx-auto">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold text-white mb-2">Enkripsi & Sisipkan Data</h1>
-      <p class="text-slate-400">Sembunyikan pesan rahasia Anda ke dalam media digital dengan aman.</p>
+  <div class="text-white max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 mt-12 sm:mt-16 mb-12">
+    <header class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Enkripsi & Sisipkan Data</h1>
+      <p class="text-slate-400 text-sm sm:text-base">Sembunyikan pesan rahasia Anda ke dalam media digital dengan aman.</p>
     </header>
 
-    <div class="bg-slate-900 p-8 rounded-2xl shadow-2xl border border-slate-800">
+    <div class="bg-slate-900 p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-800">
       <transition name="fade">
-        <div v-if="isHostTooSmall" class="bg-red-500/10 border border-red-500/50 text-red-200 p-4 rounded-xl mb-8 flex items-start gap-3">
-          <i class="pi pi-exclamation-triangle text-xl mt-0.5"></i>
+        <div v-if="isHostTooSmall" class="bg-red-500/10 border border-red-500/50 text-red-200 p-3 sm:p-4 rounded-xl mb-6 sm:mb-8 flex items-start gap-3">
+          <i class="pi pi-exclamation-triangle text-lg sm:text-xl mt-0.5"></i>
           <div>
-            <p class="font-bold">Media host terlalu kecil!</p>
-            <p class="text-sm opacity-90">Ukuran host ({{ formatBytes(hostFile?.size || 0) }}) harus lebih besar dari payload ({{ formatBytes(finalPayloadSize) }}).</p>
+            <p class="font-bold text-sm sm:text-base">Media host terlalu kecil!</p>
+            <p class="text-xs sm:text-sm opacity-90">Ukuran host ({{ formatBytes(hostFile?.size || 0) }}) harus lebih besar dari payload ({{ formatBytes(finalPayloadSize) }}).</p>
           </div>
         </div>
       </transition>
 
       <form @submit.prevent="handleEncode">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 md:gap-8">
           
-          <div class="lg:col-span-7 space-y-8">
+          <div class="lg:col-span-7 space-y-6 sm:space-y-8">
             
             <div>
-              <label class="font-semibold block mb-3 text-indigo-400">1. Data Rahasia (Payload)</label>
+              <label class="font-semibold block mb-2 sm:mb-3 text-indigo-400 text-sm sm:text-base">1. Data Rahasia (Payload)</label>
               
-              <div class="flex bg-slate-800 p-1 rounded-lg mb-4 w-fit border border-slate-700">
+              <div class="flex bg-slate-800 p-1 rounded-lg mb-3 sm:mb-4 w-fit border border-slate-700">
                 <button 
                   type="button"
                   @click="inputMode = 'file'"
-                  class="px-4 py-2 rounded-md text-sm font-medium transition-all"
+                  class="px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all"
                   :class="inputMode === 'file' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'"
                 >
-                  <i class="pi pi-file mr-2"></i>Upload File
+                  <i class="pi pi-file mr-1 sm:mr-2"></i>Upload File
                 </button>
                 <button 
                   type="button"
                   @click="inputMode = 'text'"
-                  class="px-4 py-2 rounded-md text-sm font-medium transition-all"
+                  class="px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all"
                   :class="inputMode === 'text' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'"
                 >
-                  <i class="pi pi-align-left mr-2"></i>Ketik Pesan
+                  <i class="pi pi-align-left mr-1 sm:mr-2"></i>Ketik Pesan
                 </button>
               </div>
 

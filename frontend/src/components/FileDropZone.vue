@@ -1,11 +1,11 @@
 <template>
   <div>
-    <label class="font-semibold block mb-2 text-indigo-400">
+    <label class="font-semibold block mb-1 sm:mb-2 text-indigo-400 text-sm sm:text-base">
       {{ label }} <span v-if="required" class="text-red-500">*</span>
     </label>
     
     <div
-      class="relative group w-full h-48 rounded-xl border-2 border-dashed transition-all duration-300 ease-in-out cursor-pointer overflow-hidden"
+      class="relative group w-full h-32 sm:h-40 md:h-48 rounded-xl border-2 border-dashed transition-all duration-300 ease-in-out cursor-pointer overflow-hidden"
       :class="[
         isDragging 
           ? 'border-indigo-400 bg-indigo-500/10 scale-[1.02]' 
@@ -17,24 +17,24 @@
       @drop.prevent="handleDrop"
       @click="triggerInput"
     >
-      <div v-if="!file" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-        <div class="p-3 rounded-full bg-slate-700/50 mb-3 group-hover:scale-110 transition-transform">
-          <i :class="icon" class="text-3xl text-slate-400 group-hover:text-indigo-400 transition-colors"></i>
+      <div v-if="!file" class="absolute inset-0 flex flex-col items-center justify-center text-center p-2 sm:p-4">
+        <div class="p-2 sm:p-3 rounded-full bg-slate-700/50 mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
+          <i :class="icon" class="text-xl sm:text-2xl md:text-3xl text-slate-400 group-hover:text-indigo-400 transition-colors"></i>
         </div>
-        <p class="text-sm text-slate-300 font-medium">
+        <p class="text-xs sm:text-sm text-slate-300 font-medium">
           Klik untuk upload <span v-if="accept">({{ acceptExtensions }})</span>
         </p>
-        <p class="text-xs text-slate-500 mt-1">atau drag & drop file ke sini</p>
+        <p class="text-xs text-slate-500 mt-0.5 sm:mt-1">atau drag & drop file ke sini</p>
       </div>
 
       <div v-else class="absolute inset-0 flex flex-col items-center justify-center bg-slate-800 z-10">
-        <i class="pi pi-check-circle text-4xl text-emerald-400 mb-2 animate-bounce"></i>
-        <p class="font-bold text-white truncate max-w-[90%] px-4">{{ file.name }}</p>
-        <p class="text-xs text-emerald-400 font-mono mt-1">{{ formatBytes(file.size) }}</p>
+        <i class="pi pi-check-circle text-2xl sm:text-3xl md:text-4xl text-emerald-400 mb-1 sm:mb-2 animate-bounce"></i>
+        <p class="font-bold text-white truncate max-w-[90%] px-2 sm:px-4 text-sm sm:text-base">{{ file.name }}</p>
+        <p class="text-xs text-emerald-400 font-mono mt-0.5 sm:mt-1">{{ formatBytes(file.size) }}</p>
         
         <button 
           @click.stop="removeFile"
-          class="mt-4 px-3 py-1 rounded-md bg-red-500/10 text-red-400 text-sm hover:bg-red-500 hover:text-white transition-colors flex items-center gap-2"
+          class="mt-2 sm:mt-4 px-2 sm:px-3 py-1 rounded-md bg-red-500/10 text-red-400 text-xs sm:text-sm hover:bg-red-500 hover:text-white transition-colors flex items-center gap-1 sm:gap-2"
         >
           <i class="pi pi-trash"></i> Hapus
         </button>
