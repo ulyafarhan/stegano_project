@@ -22,12 +22,12 @@
                 @click="triggerPayloadInput"
               >
                 <div class="text-center">
-                  <i class="pi pi-cloud-upload text-4xl text-slate-500"></i>
+                  <i class="pi pi-file text-4xl text-slate-500"></i>
                   <p class="mt-2 text-slate-400">
                     Drag & drop atau <span class="text-indigo-400">klik untuk memilih</span> file
                     rahasia.
                   </p>
-                  <p v-if="payloadFile" class="mt-2 text-green-400">
+                  <p v-if="payloadFile" class="mt-2 text-green-400 font-mono text-sm">
                     {{ payloadFile.name }} ({{ formatBytes(payloadFile.size) }})
                   </p>
                 </div>
@@ -56,11 +56,17 @@
                     Drag & drop atau <span class="text-indigo-400">klik untuk memilih</span> media
                     penampung.
                   </p>
-                  <p v-if="hostFile" class="mt-2 text-green-400">
+                  <p v-if="hostFile" class="mt-2 text-green-400 font-mono text-sm">
                     {{ hostFile.name }} ({{ formatBytes(hostFile.size) }})
                   </p>
                 </div>
-                <input type="file" ref="hostInput" class="hidden" @change="onHostSelect" />
+                <input 
+                  type="file" 
+                  ref="hostInput" 
+                  class="hidden" 
+                  accept=".png,.jpg,.jpeg,.wav,.mp3,.mp4,.m4a,.pdf,.docx,.xlsx"
+                  @change="onHostSelect" 
+                />
               </div>
             </div>
           </div>
@@ -86,7 +92,7 @@
               <Button
                 type="submit"
                 label="Proses Sekarang"
-                icon="pi pi-arrow-right"
+                icon="pi pi-lock"
                 iconPos="right"
                 :loading="isLoading"
                 :disabled="isLoading || !hostFile || !payloadFile || isHostTooSmall"
@@ -118,6 +124,7 @@ const API_URL = 'http://localhost:8000'
 
 const isHostTooSmall = computed(() => {
   if (!payloadFile.value || !hostFile.value) return false
+  // Peringatan dasar: Host sebaiknya lebih besar dari payload
   return hostFile.value.size <= payloadFile.value.size
 })
 
@@ -175,16 +182,6 @@ const handleEncode = async () => {
     return
   }
 
-  if (isHostTooSmall.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Ukuran media host harus lebih besar dari file rahasia.',
-      life: 3000
-    })
-    return
-  }
-
   isLoading.value = true
   const formData = new FormData()
   formData.append('payload_file', payloadFile.value)
@@ -211,18 +208,24 @@ const handleEncode = async () => {
         detail: 'File berhasil dienkripsi dan diunduh.',
         life: 3000
       })
+      
+      // Reset form
+      payloadFile.value = null
+      hostFile.value = null
     }
   } catch (error) {
     let message = 'Terjadi error tidak diketahui.'
     if (error.response && error.response.data) {
+      // Jika response blob, kita perlu konversi ke text untuk baca error JSON
       try {
-        const errorJson = JSON.parse(await error.response.data.text())
+        const errorText = await error.response.data.text()
+        const errorJson = JSON.parse(errorText)
         message = errorJson.detail || message
       } catch {
         message = 'Gagal memproses file di server.'
       }
     }
-    toast.add({ severity: 'error', summary: 'Error', detail: message, life: 5000 })
+    toast.add({ severity: 'error', summary: 'Gagal', detail: message, life: 5000 })
   } finally {
     isLoading.value = false
   }

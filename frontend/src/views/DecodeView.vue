@@ -21,7 +21,7 @@
                   Drag & drop atau <span class="text-indigo-400">klik untuk memilih</span> file
                   terenkripsi.
                 </p>
-                <p v-if="hostFile" class="mt-2 text-green-400">
+                <p v-if="hostFile" class="mt-2 text-green-400 font-mono text-sm">
                   {{ hostFile.name }} ({{ formatBytes(hostFile.size) }})
                 </p>
               </div>
@@ -117,6 +117,21 @@ const handleDecode = async () => {
       life: 3000
     })
     return
+  }
+
+  // Validasi Manual di Frontend untuk memberikan pesan yang lebih jelas
+  const fileName = hostFile.value.name
+  const validExtensions = ['.png', '.jpg', '.jpeg', '.wav', '.mp3', '.mp4', '.m4a', '.pdf', '.docx', '.xlsx']
+  const hasValidExt = validExtensions.some(ext => fileName.toLowerCase().endsWith(ext))
+
+  if (!hasValidExt) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Format File Mencurigakan',
+      detail: 'File tidak memiliki ekstensi yang dikenali. Backend mungkin menolaknya. Pastikan file berakhiran .pdf, .png, dll.',
+      life: 5000
+    })
+    // Kita tetap izinkan lanjut, siapa tahu Backend bisa handle (misal by mime-type nantinya)
   }
 
   isLoading.value = true

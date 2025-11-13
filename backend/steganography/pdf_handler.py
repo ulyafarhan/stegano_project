@@ -30,32 +30,22 @@ class PDFHandler(SteganographyStrategy):
 
     def decode(self, host_file: io.BytesIO) -> bytes:
         host_file.seek(0)
-        reader = PdfReader(host_file)
-        
-        metadata = reader.metadata
-        if self.METADATA_KEY not in metadata:
-            raise ValueError("Tidak ada metadata steganografi ditemukan.")
-            
-        encoded_payload = metadata[self.METADATA_KEY]
-        
-        try:
-            return base64.b64decode(encoded_payload)
-        except Exception:
-            raise ValueError("Data metadata rusak atau format salah.")def decode(self, host_file: io.BytesIO) -> bytes:
-        host_file.seek(0)
         try:
             reader = PdfReader(host_file)
         except Exception:
             raise ValueError("File PDF host tampaknya rusak atau tidak valid.")
         
         metadata = reader.metadata
-        if self.METADATA_KEY not in metadata:
+        if metadata is None or self.METADATA_KEY not in metadata:
             raise ValueError("Tidak ada metadata steganografi ditemukan.")
             
         encoded_payload = metadata[self.METADATA_KEY]
         
         try:
-            # PERBAIKAN: Tangani kasus jika pypdf mengembalikan bytes
+            # Pypdf bisa mengembalikan IndirectObject
+            if hasattr(encoded_payload, 'get_object'):
+                encoded_payload = encoded_payload.get_object()
+                
             if isinstance(encoded_payload, bytes):
                 encoded_payload = encoded_payload.decode('utf-8')
                 
