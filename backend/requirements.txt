@@ -1,10 +1,4 @@
 fastapi
 uvicorn[standard]
 python-multipart
-pydantic
-pillow
-pypdf
-piexif
-mutagen
-python-docx
-openpyxl
+pycryptodome

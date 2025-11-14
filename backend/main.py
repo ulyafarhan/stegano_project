@@ -1,19 +1,24 @@
 import io
-import os
 import logging
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, status
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-import crypto
-from steganography.context import SteganographyService
-from utils import create_package, extract_package, detect_file_type
+# Impor layanan baru berdasarkan dokumen desain Anda
+import crypto_service 
+import steganography_service
 
-app = FastAPI(title="VertexGuard API")
-stegano_service = SteganographyService()
+# Impor utilitas yang sudah ada untuk menangani paket nama file
+from utils import create_package, extract_package
 
-# Konfigurasi CORS (Wajib untuk Frontend)
-origins = ["http://localhost:5173"]
+app = FastAPI(title="VertexGuard API (AES-EOF)")
+
+# Konfigurasi CORS (sesuai dokumen desain)
+origins = [
+    "http://localhost:5173",
+    # "https://nama-app-anda.vercel.app" 
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -26,104 +31,76 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_file_ext(filename: str) -> str:
-    return os.path.splitext(filename)[1].lower()
-
-def resolve_format(file_data: bytes, filename: str) -> str:
-    # Ambil lebih banyak bytes untuk deteksi yang lebih akurat
-    detected_ext = detect_file_type(file_data[:64])
-    
-    print(f"[DEBUG] Filename: {filename}")
-    print(f"[DEBUG] Header Bytes: {file_data[:16]}")
-    print(f"[DEBUG] Detected Ext: {detected_ext}")
-    
-    if detected_ext:
-        return detected_ext
-    
-    # Fallback ke ekstensi nama file jika deteksi gagal
-    return get_file_ext(filename)
-
 @app.post("/encode")
 async def http_encode(
-    key: int = Form(...),
+    key: str = Form(...),
     payload_file: UploadFile = File(...),
     host_file: UploadFile = File(...)
 ):
     try:
         payload_data = await payload_file.read()
         host_data = await host_file.read()
-        
-        host_ext = resolve_format(host_data, host_file.filename)
-        if not host_ext:
-             raise ValueError("Format file host tidak dikenali. Gunakan: .png, .jpg, .pdf, .wav")
 
+        # 1. Bungkus payload DENGAN nama filenya (dari utils.py)
         packaged_data = create_package(payload_data, payload_file.filename)
-        encrypted_package = crypto.encrypt(packaged_data, key)
         
-        host_buffer = io.BytesIO(host_data)
-        output_buffer = stegano_service.encode(host_buffer, encrypted_package, host_ext)
+        # 2. Enkripsi paket (menggunakan AES-256 baru)
+        encrypted_package = crypto_service.encrypt(packaged_data, key)
         
+        # 3. Sisipkan (EOF Appending baru)
+        combined_file_bytes = steganography_service.encode(host_data, encrypted_package)
+        
+        output_buffer = io.BytesIO(combined_file_bytes)
         output_filename = f"encoded_{host_file.filename}"
-        if not output_filename.lower().endswith(host_ext):
-            output_filename += host_ext
 
         return StreamingResponse(
             output_buffer,
             media_type="application/octet-stream",
             headers={"Content-Disposition": f"attachment; filename=\"{output_filename}\""}
         )
-
     except Exception as e:
         logger.error(f"Encode error: {e}")
-        raise HTTPException(status_code=400, detail=f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Enkripsi gagal: {str(e)}")
 
 @app.post("/decode")
 async def http_decode(
-    key: int = Form(...),
+    key: str = Form(...),
     host_file: UploadFile = File(...)
 ):
     try:
-        host_data = await host_file.read()
+        combined_file_bytes = await host_file.read()
         
-        # RESOLVER BARU: Memprioritaskan isi file daripada nama
-        host_ext = resolve_format(host_data, host_file.filename)
+        # 1. Ekstrak (EOF Appending baru)
+        encrypted_package = steganography_service.decode(combined_file_bytes)
         
-        if not host_ext:
-            raise ValueError("Format file tidak dikenali atau rusak.")
-
-        print(f"[DEBUG] Using Handler for: {host_ext}") # Cek log terminal
-
-        host_buffer = io.BytesIO(host_data)
+        # 2. Dekripsi (menggunakan AES-256 baru)
+        decrypted_package = crypto_service.decrypt(encrypted_package, key)
         
-        # 1. Ekstrak
-        encrypted_package = stegano_service.decode(host_buffer, host_ext)
-        
-        # 2. Dekripsi
-        decrypted_package = crypto.decrypt(encrypted_package, key)
-        
-        # 3. Ambil Nama Asli
-        # (Jika ini file lama, utils.py akan otomatis memberinya nama 'hasil_ekstraksi.xxx')
+        # 3. Buka bungkusan paket untuk mendapatkan file asli + nama filenya (dari utils.py)
         original_content, original_filename = extract_package(decrypted_package)
-        
+
         output_buffer = io.BytesIO(original_content)
         
+        # Kirim kembali nama file asli di header, seperti yang diharapkan frontend
         return StreamingResponse(
             output_buffer,
             media_type="application/octet-stream",
             headers={"Content-Disposition": f"attachment; filename=\"{original_filename}\""}
         )
 
+    except ValueError as e:
+        # Tangani error spesifik dari service (sesuai dokumen desain)
+        logger.warning(f"Decode error: {e}")
+        detail = str(e)
+        if "Password salah" in detail:
+            raise HTTPException(status_code=401, detail="Password salah atau data rusak.")
+        if "marker tidak ada" in detail:
+            raise HTTPException(status_code=404, detail="Tidak ada data tersembunyi yang ditemukan.")
+        raise HTTPException(status_code=400, detail=detail)
     except Exception as e:
-        logger.error(f"Decode error: {e}")
-        msg = str(e)
-        # Pesan error lebih manusiawi
-        if "codec" in msg or "padding" in msg:
-            msg = "Gagal mendekripsi. Kunci (Key) salah."
-        elif "metadata" in msg:
-            msg = "Tidak ada pesan rahasia ditemukan di file ini."
-            
-        raise HTTPException(status_code=400, detail=msg)
+        logger.error(f"Internal decode error: {e}")
+        raise HTTPException(status_code=500, detail="Terjadi error internal.")
 
 @app.get("/")
 def read_root():
-    return {"status": "Steganography API is running."}
+    return {"status": "Steganography API (AES-EOF) is running."}

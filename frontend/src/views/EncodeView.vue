@@ -17,29 +17,30 @@
       </transition>
 
       <form @submit.prevent="handleEncode">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 md:gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          <div class="lg:col-span-7 space-y-6 sm:space-y-8">
+          <!-- Left side: Payload and Host -->
+          <div class="lg:col-span-7 space-y-8">
             
             <div>
-              <label class="font-semibold block mb-2 sm:mb-3 text-indigo-400 text-sm sm:text-base">1. Data Rahasia (Payload)</label>
+              <label class="font-semibold block mb-3 text-indigo-400 text-base">1. Data Rahasia (Payload)</label>
               
-              <div class="flex bg-slate-800 p-1 rounded-lg mb-3 sm:mb-4 w-fit border border-slate-700">
+              <div class="flex bg-slate-800 p-1 rounded-lg mb-4 w-fit border border-slate-700">
                 <button 
                   type="button"
                   @click="inputMode = 'file'"
-                  class="px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all"
+                  class="px-4 py-2 rounded-md text-sm font-medium transition-all"
                   :class="inputMode === 'file' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'"
                 >
-                  <i class="pi pi-file mr-1 sm:mr-2"></i>Upload File
+                  <i class="pi pi-file mr-2"></i>Upload File
                 </button>
                 <button 
                   type="button"
                   @click="inputMode = 'text'"
-                  class="px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all"
+                  class="px-4 py-2 rounded-md text-sm font-medium transition-all"
                   :class="inputMode === 'text' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'"
                 >
-                  <i class="pi pi-align-left mr-1 sm:mr-2"></i>Ketik Pesan
+                  <i class="pi pi-align-left mr-2"></i>Ketik Pesan
                 </button>
               </div>
 
@@ -83,49 +84,54 @@
             </div>
           </div>
 
+          <!-- Right side: Configuration and Submit -->
           <div class="lg:col-span-5">
-            <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 sticky top-6">
-              <h3 class="text-lg font-semibold mb-4 text-indigo-400 flex items-center gap-2">
-                <i class="pi pi-cog"></i> Konfigurasi
-              </h3>
+            <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 shadow-md sticky top-24">
               
+              <h3 class="text-lg font-semibold mb-6 text-indigo-400 flex items-center gap-3">
+                <i class="pi pi-cog"></i>
+                <span>3. Konfigurasi & Proses</span>
+              </h3>
+
               <div class="space-y-6">
+                
                 <div>
-                  <label class="font-medium block mb-2 text-slate-300">Kunci Enkripsi (1-255)</label>
-                  <InputNumber
+                  <label class="font-medium block mb-2 text-slate-300">Password Enkripsi</label>
+                  <Password
                     v-model="key"
-                    :min="1"
-                    :max="255"
-                    showButtons
-                    buttonLayout="horizontal"
+                    placeholder="Masukkan password rahasia"
+                    :feedback="false"
+                    toggleMask
                     class="w-full"
-                    inputClass="text-center bg-slate-900 border-slate-600 text-white font-mono"
-                  >
-                    <template #incrementbuttonicon><span class="pi pi-plus" /></template>
-                    <template #decrementbuttonicon><span class="pi pi-minus" /></template>
-                  </InputNumber>
+                    inputClass="w-full p-3 bg-slate-900 border-2 border-slate-700 rounded-lg text-white font-mono focus:border-indigo-500 focus:outline-none transition-colors"
+                  />
+                  <p class="text-xs text-slate-500 mt-2">
+                    <i class="pi pi-info-circle mr-1"></i> Password ini akan digunakan untuk mengenkripsi data Anda.
+                  </p>
                 </div>
 
-                <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
-                  <div class="flex justify-between text-sm mb-1">
+                <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50 space-y-3">
+                  <div class="flex justify-between text-sm items-center">
                     <span class="text-slate-400">Estimasi Payload:</span>
-                    <span class="text-white font-mono">{{ formatBytes(finalPayloadSize) }}</span>
+                    <span class="text-white font-mono font-semibold">{{ formatBytes(finalPayloadSize) }}</span>
                   </div>
-                  <div class="flex justify-between text-sm">
+                  <div class="flex justify-between text-sm items-center">
                     <span class="text-slate-400">Kapasitas Host:</span>
-                    <span class="text-white font-mono">{{ hostFile ? formatBytes(hostFile.size) : '-' }}</span>
+                    <span class="text-white font-mono font-semibold">
+                      {{ hostFile ? formatBytes(hostFile.size) : '-' }}
+                    </span>
                   </div>
                 </div>
 
                 <div class="pt-4 border-t border-slate-700">
                   <Button
                     type="submit"
-                    label="Proses Enkripsi"
+                    label="Enkripsi & Sembunyikan"
                     icon="pi pi-lock"
                     iconPos="right"
                     :loading="isLoading"
                     :disabled="!isValid"
-                    class="w-full p-button-lg bg-indigo-600 hover:bg-indigo-500 border-none shadow-lg shadow-indigo-900/20 transition-all transform hover:-translate-y-0.5"
+                    class="w-full font-bold py-4 px-6 text-lg rounded-lg bg-indigo-600 hover:bg-indigo-700 border-indigo-600 shadow-lg shadow-indigo-600/20 transition-all duration-200 transform hover:-translate-y-0.5"
                   />
                 </div>
               </div>
@@ -137,15 +143,17 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import { useToast } from 'primevue/usetoast'
 import FileDropZone from '../components/FileDropZone.vue'
+import Password from 'primevue/password' // Impor Password
 
 const toast = useToast()
 const isLoading = ref(false)
-const key = ref(50)
+const key = ref('') // Diubah ke string
 
 // State untuk Dual Mode
 const inputMode = ref('file') // 'file' | 'text'
@@ -202,20 +210,16 @@ const handleEncode = async () => {
   isLoading.value = true
   const formData = new FormData()
   
-  // LOGIC UTAMA: Tentukan apa yang dikirim ke Backend
   if (inputMode.value === 'file') {
-    // 1. Kirim File Upload Biasa
     formData.append('payload_file', uploadedPayload.value)
   } else {
-    // 2. Konversi Teks menjadi File .txt Virtual
     const textBlob = new Blob([textPayload.value], { type: 'text/plain' })
-    // Kita beri nama file "pesan_rahasia.txt"
     const textFile = new File([textBlob], "pesan_rahasia.txt", { type: "text/plain" })
     formData.append('payload_file', textFile)
   }
 
   formData.append('host_file', hostFile.value)
-  formData.append('key', key.value.toString())
+  formData.append('key', key.value) // Kirim sebagai string
 
   try {
     const response = await axios.post(`${API_URL}/encode`, formData, {
@@ -233,7 +237,6 @@ const handleEncode = async () => {
       downloadBlob(response.data, filename)
       toast.add({ severity: 'success', summary: 'Sukses', detail: 'Pesan berhasil disembunyikan & diunduh!', life: 3000 })
       
-      // Reset form text agar tidak ganda
       if(inputMode.value === 'text') textPayload.value = ''
       else uploadedPayload.value = null
     }
@@ -259,5 +262,8 @@ const handleEncode = async () => {
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+:deep(.p-password-input) {
+  width: 100%;
 }
 </style>
