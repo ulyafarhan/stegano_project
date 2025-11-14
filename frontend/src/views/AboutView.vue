@@ -3,7 +3,7 @@
     <header class="text-center mb-12 sm:mb-16">
       <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
         <span class="bg-gradient-to-r from-indigo-400 to-purple-500 text-transparent bg-clip-text">
-          Tentang VertexGuard
+          Tentang PrivaSel
         </span>
       </h1>
       <p class="text-base sm:text-lg text-slate-400 max-w-3xl mx-auto">
@@ -16,7 +16,7 @@
       <div>
         <h2 class="text-2xl sm:text-3xl font-bold text-indigo-400 mb-4">Misi Kami</h2>
         <p class="text-slate-300/90 leading-relaxed text-base">
-          Misi kami adalah menyediakan alat yang mudah digunakan namun kuat untuk melindungi privasi dan kerahasiaan informasi. Di era digital saat ini, VertexGuard hadir sebagai solusi untuk komunikasi yang aman melalui media sehari-hari.
+          Misi kami adalah menyediakan alat yang mudah digunakan namun kuat untuk melindungi privasi dan kerahasiaan informasi. Di era digital saat ini, PrivaSel hadir sebagai solusi untuk komunikasi yang aman melalui media sehari-hari.
         </p>
       </div>
 

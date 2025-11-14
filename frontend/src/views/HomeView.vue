@@ -3,7 +3,7 @@
     <header class="mb-12 sm:mb-16 text-center">
       <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 tracking-tight">
         <span class="bg-gradient-to-r from-indigo-400 to-purple-500 text-transparent bg-clip-text">
-          VertexGuard Steganography
+          PrivaSel Steganography
         </span>
       </h1>
       <p class="text-base sm:text-lg text-slate-400 max-w-3xl mx-auto">

@@ -8,7 +8,7 @@
         <button @click="isSidebarOpen = !isSidebarOpen" class="text-slate-300 hover:text-white focus:outline-none transition-colors p-2 rounded-lg hover:bg-slate-800">
           <i class="pi pi-bars text-lg sm:text-xl"></i>
         </button>
-        <h1 class="text-base sm:text-lg md:text-xl font-bold text-indigo-400">VertexGuard</h1>
+        <h1 class="text-base sm:text-lg md:text-xl font-bold text-indigo-400">PrivaSel</h1>
       </div>
     </div>
 
@@ -25,7 +25,7 @@
       :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
       <div class="p-4 sm:p-5 h-full overflow-y-auto">
-        <h1 class="text-xl sm:text-2xl font-bold text-indigo-400 mb-6 sm:mb-8 hidden lg:block">VertexGuard</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-indigo-400 mb-6 sm:mb-8 hidden lg:block">PrivaSel</h1>
         
         <div class="lg:hidden flex justify-end mb-3 sm:mb-4">
           <button @click="isSidebarOpen = false" class="text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800">

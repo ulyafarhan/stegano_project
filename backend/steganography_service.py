@@ -1,47 +1,68 @@
 # steganography_service.py
 import struct
+import os
 
-# Kita gunakan marker yang deskriptif
+# --- Definisi marker (Sama seperti sebelumnya) ---
 MAGIC_MARKER = b"AES-EOF"
 MARKER_LEN = len(MAGIC_MARKER)
 # 8 bytes (unsigned long long) untuk menyimpan ukuran payload
 SIZE_LEN = 8 
 
-def encode(host_bytes: bytes, payload_bytes: bytes) -> bytes:
-    # 'Q' adalah 8-byte unsigned long long
-    payload_size_bytes = struct.pack('>Q', len(payload_bytes))
-    
-    # Sesuai desain: [HOST] + [PAYLOAD] + [UKURAN PAYLOAD] + [MAGIC]
-    return host_bytes + payload_bytes + payload_size_bytes + MAGIC_MARKER
-
-def decode(combined_bytes: bytes) -> bytes:
-    # 1. Cek Magic Marker
-    if combined_bytes[-MARKER_LEN:] != MAGIC_MARKER:
-        raise ValueError("Tidak ada data tersembunyi yang ditemukan (marker tidak ada).")
-    
+def encode(host_file_path: str, payload_bytes: bytes):
+    """
+    Menyisipkan payload ke AKHIR file host yang ada di disk.
+    Tidak memuat seluruh file host ke memori.
+    """
     try:
-        # 2. Ekstrak Ukuran Payload (8 bytes sebelum marker)
-        size_bytes_index_start = -(MARKER_LEN + SIZE_LEN)
-        size_bytes_index_end = -MARKER_LEN
+        # 'Q' adalah 8-byte unsigned long long
+        payload_size_bytes = struct.pack('>Q', len(payload_bytes))
         
-        payload_size_bytes = combined_bytes[size_bytes_index_start:size_bytes_index_end]
-        payload_size = struct.unpack('>Q', payload_size_bytes)[0]
-        
-        # 3. Ekstrak Payload
-        payload_index_start = -(MARKER_LEN + SIZE_LEN + payload_size)
-        payload_index_end = -(MARKER_LEN + SIZE_LEN)
-        
-        # Validasi keamanan dasar
-        if abs(payload_index_start) > len(combined_bytes):
-            raise IndexError("Indeks payload kalkulasi tidak valid.")
+        # Buka file host dalam mode 'append binary' (ab)
+        with open(host_file_path, 'ab') as f:
+            # Sesuai desain: [PAYLOAD] + [UKURAN PAYLOAD] + [MAGIC]
+            f.write(payload_bytes)
+            f.write(payload_size_bytes)
+            f.write(MAGIC_MARKER)
+            
+    except IOError as e:
+        raise ValueError(f"Gagal menulis ke file host: {e}")
 
-        payload_bytes = combined_bytes[payload_index_start:payload_index_end]
-        
-        # Validasi akhir
-        if len(payload_bytes) != payload_size:
-            raise IndexError("Ukuran payload tidak cocok dengan metadata.")
 
-        return payload_bytes
-        
-    except (struct.error, IndexError) as e:
+def decode(combined_file_path: str) -> bytes:
+    """
+    Mengekstrak payload dari file di disk tanpa memuat seluruh file ke memori.
+    Menggunakan file.seek() untuk membaca dari akhir.
+    """
+    try:
+        with open(combined_file_path, 'rb') as f:
+            # --- 1. Cek Magic Marker ---
+            # Pindah ke akhir file dikurangi panjang marker
+            f.seek(-MARKER_LEN, os.SEEK_END) 
+            marker = f.read(MARKER_LEN)
+            if marker != MAGIC_MARKER:
+                raise ValueError("Tidak ada data tersembunyi yang ditemukan (marker tidak ada).")
+
+            # --- 2. Ekstrak Ukuran Payload ---
+            # Pindah ke posisi sebelum marker dan size
+            f.seek(-(MARKER_LEN + SIZE_LEN), os.SEEK_END)
+            payload_size_bytes = f.read(SIZE_LEN)
+            payload_size = struct.unpack('>Q', payload_size_bytes)[0]
+            
+            # --- 3. Ekstrak Payload ---
+            # Pindah ke posisi awal payload
+            payload_index_start = -(MARKER_LEN + SIZE_LEN + payload_size)
+            f.seek(payload_index_start, os.SEEK_END)
+            
+            # Baca payload
+            payload_bytes = f.read(payload_size)
+            
+            # Validasi akhir
+            if len(payload_bytes) != payload_size:
+                raise IndexError("Ukuran payload tidak cocok dengan metadata (file korup).")
+
+            return payload_bytes
+            
+    except (struct.error, IndexError, IOError) as e:
         raise ValueError(f"File korup atau format metadata tidak valid: {e}")
+    except FileNotFoundError:
+        raise ValueError("File host tidak ditemukan.")
